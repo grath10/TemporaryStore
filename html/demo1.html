@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultrag.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+    <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>大华摄像头视频监控(非官方webplugin)</title>
+    <link rel="stylesheet" href="/js/thirdparty/layui/css/layui.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/font/font-awesome.min.css"/>
+    <link rel="stylesheet" href="/css/map_home.css"/>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <script src="/js/thirdparty/jquery-2.2.3.min.js"></script>
+    <script src="/js/thirdparty/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="mappage-wrap">
+        <!-- 顶部导航  -->
+        <div class="mapHeader-wrap">
+            <!-- 筛选项 -->
+            <div class="mapHeader-filter">
+                <!--<div class="sel-box sel-type" id="sel-type" style="z-index:1;">
+                    <label>电梯主题：</label>
+                    <input type="radio" name="sel-type" value="0" />电梯
+                    <input type="radio" name="sel-type" value="1" checked="checked" />救援
+                    <input type="radio" name="sel-type" value="2"  />维修
+                    <input type="radio" name="sel-type" value="3" />保养
+                </div>-->
+                <a class="link-logout filter-a" href="/logout"><i class="fa fa-power-off"></i></a>
+            </div>
+        </div>
+        <!-- 内容区域  -->
+        <div class="map-wrap">
+            <!-- 地图区域 -->
+            <div class="map-bmap-wrap">
+                <!--<div class="bmap-cover" id="loading-cover" style="display:block;"></div>
+                <div class="bmap-tipbar tip-loading" id='loading-tip' style="display: block;">
+                    <i class="icon-map i-loading"></i>努力加载中
+                </div>-->
+                <!-- 地图容器 -->
+                <div id="allmap" class="bmap-container" style="overflow: hidden; background-color: rgb(243, 241, 236); color: rgb(0, 0, 0); text-align: left; z-index: 0;"></div>
+                <span class="fold-btn-icon" id="fold-btn" style="display: none;">
+                    <i class="mapicon"></i>
+                </span>
+                <div class="listinfo listinfo-open" id="map-list" style="display: none;">
+                    <div class="list-contents">
+                        <!--<div class="collapse-top marquee"></div>-->
+                        <div class="marquee"></div>
+                        <div style="background:linear-gradient(to left,#efefef,#b6b6b6,#efefef);height:1px;"></div>
+                        <div class="collapse-bottom">
+                            <div class="chart">
+                                <div id="bar-chart" style="width: 360px;height: 200px;"></div>
+                                <div id="cost-bar-chart" style="width: 360px;height: 200px;"></div>
+                            </div>
+                            <div class="event-content notSeen"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="video-panel-dh" tabindex="-1" role="dialog" aria-labelledby="video-dahua-panel" aria-hidden="true">
+        <div class="modal-dialog" style="width:630px;margin-left:250px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"><span>实时预览</span><input id="params-dh" style="display: none"/></h4>
+                </div>
+                <div class="modal-body">
+                    <iframe frameborder= "0" scrolling="no" style="background-color:transparent; position: absolute; z-index: -1; width: 100%; height: 100%; top: 0; left:0;"></iframe>
+                    <!-- style="top:60px; left:0; width: 963px; height: 631px;" -->
+                    <div id="f_ocx"></div>
+                </div>
+                <div class="modal-footer">
+                    <input class="btn" onclick="loginDevice(0);" type="button" value="登录设备" />
+                    <input class="btn" onclick="clickStartRealPlay(0);" type="button" value="开始预览" />
+                    <input class="btn" onclick="clickStopRealPlay(0);" type="button" value="停止预览" />
+                    <input class="btn" onclick="clickStartVoiceTalk(0);" type="button" value="开始对讲" />
+                    <input class="btn" onclick="clickStopVoiceTalk(0);" type="button" value="停止对讲" />
+                    <input class="btn" onclick="logoutDevice(0);" type="button" value="登出设备" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div layout:insert="~{modal/modal-no-footer::modal(modalId='video-modal', modalHeader='视频回放')}" th:remove="tag">
+        <form layout:fragment="modal-content" role="form" id="video-editForm" novalidate="novalidate">
+            <div id="videoContainer"></div>
+        </form>
+    </div>
+</body>
+<script src="/js/app.js"></script>
+<script src="/js/tools.js"></script>
+<script src="/js/ability.js"></script>
+<script src="/js/thirdparty/layui/layui.all.js"></script>
+<script>
+    debugger;
+    var ua = navigator.userAgent.toLowerCase();
+    var g_ocx;
+    var PLUGINS_CLASSID = '5B709BF0-B3BB-4287-8107-B40D88394F48';
+    var Sys = {};
+    var s;
+    (s = ua.match(/(msie\s|trident.*rv:)([\d.]+)/)) ? Sys.ie = s[2] :
+        (s = ua.match(/firefox\/([\d.]+)/)) ? Sys.firefox = s[1] :
+            (s = ua.match(/chrome\/([\d.]+)/)) ? Sys.chrome = s[1] :
+                (s = ua.match(/opera.([\d.]+)/)) ? Sys.opera = s[1] :
+                    (s = ua.match(/version\/([\d.]+).*safari/)) ? Sys.safari = s[1] : 0;
+    var PLUGINS_NAME = 'WebActiveEXE.Plugin.DH.1';
+    var hasPlugin = checkPlugins();
+
+    var mainOcxHtml = '';
+    if (Sys.ie){
+        mainOcxHtml = '<object id="ocx" width="100%" height="100%" classid="CLSID:{' + PLUGINS_CLASSID + '}" codebase="/webrec.cab"></object>';
+    } else {
+        mainOcxHtml = '<object id="ocx" width="100%" height="100%" type="application/npmedia-plugin-dahua-normal" VideoWindTextColor="9c9c9c" VideoWindBarColor="414141"></object>';
+    }
+
+    $(function () {
+        if(!hasPlugin) {
+            layer.open({
+                title: '警告',
+                content: '未安装过插件，点击<a target="_download" href="./system/plugin/download?name=webplugin.exe">链接</a>下载WebPlugin.exe安装!'
+            });
+        } else {
+            loadPageOcx();
+        }
+        renderView();
+    });
+
+    // 检测浏览器是否存在视频插件
+    function checkPlugins(){
+        var result;
+        if (Sys.ie) {
+            try {
+                result = new ActiveXObject(PLUGINS_NAME);
+                delete result;
+            } catch (e) {
+                return false;
+            }
+            return true;
+        } else {
+            navigator.plugins.refresh(false);
+            result = navigator.mimeTypes["application/npmedia-plugin-dahua-normal"];
+            return !!(result && result.enabledPlugin);
+        }
+    }
+
+    function loadPageOcx() {
+        document.getElementById('f_ocx').innerHTML = mainOcxHtml;
+        initPageOcx();
+    }
+
+    function initPageOcx() {
+        g_ocx = document.getElementById('ocx');
+        // 设置显示窗口数量
+        // g_ocx.SetWinBindedChannel(1, 0, 0, 0);
+        // g_ocx.EnableVideoOPFunc(1);
+        var str = '{"Protocol":"VideoFuncProtocol","Params":{"Audio": false, "Snapshot": false, "Record": false, "ZoomIn":false}}';
+        g_ocx.ProtocolPluginWithWebCall(str);
+    }
+    
+    function renderView() {
+        var property = $.extend(
+            {}, {
+                "ip": "192.168.1.108",
+                "username": 'admin',
+                "password": 'zqtech123',
+                "group": 0       // 0-大华，1-海康
+            });
+        getRealtimeStream(property);
+    }
+
+    function getRealtimeStream(json) {
+        var str = JSON.stringify(json);
+        var group = json.group;
+        var flag = '';
+        if(group == 0) {
+            flag = '-dh';
+        } else if(group == 1) {
+            flag = '-hk';
+        }
+        $('#params' + flag).val(str);
+        $("#video-panel" + flag).modal('show');
+    }
+</script>
+</html>
