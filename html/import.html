@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultrag.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8"/>
+    <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>数据导入</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/AdminLTE.min.css" />
+    <link rel="stylesheet" href="/css/uploadify.css"/>
+    <script src="/js/thirdparty/jquery-2.2.3.min.js"></script>
+    <script src="/js/thirdparty/bootstrap.min.js"></script>
+</head>
+<body class="skin-blue hold-transition sidebar-mini sidebar-collapse">
+<div class="wrapper">
+    <div class="content-wrapper" id="main-content">
+        <section class="content container-fluid">
+            <div class="row">
+                <input type="button" class="btn btn-default" value="数据导入" data-target="#data-import" data-toggle="modal"/>
+            </div>
+        </section>
+    </div>
+    <div class="modal fade in" id="data-import">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title"><span class="glyphicon glyphicon-wrench"></span>数据导入</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" id="newDataForm" method="post" title="" novalidate="novalidate">
+                        <input type="hidden" name="filename" id="task-file">
+                        <input type="hidden" name="filepath" id="task-file-path">
+                        <div class="form-group">
+                            <div class="row" style="margin-left: 5px;margin-top:5px;">
+                                <label class="col-md-2 control-label">数据文件<span style="color: red">*</span></label>
+                                <div class="col-md-8">
+                                    <div id="task_file"></div>只接受.xls电子表格文件
+                                </div>
+                            </div>
+                            <!--<div class="row" style="margin-left: 5px;margin-top:5px;">
+                                <label class="col-md-2 control-label">描述<span style="color: red">*</span></label>
+                                <div class="col-md-8">
+                                    <textarea name="memo" class="form-control" placeholder="任务描述..."></textarea>
+                                </div>
+                            </div>-->
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitForm">递交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="fragments/footer::footer" />
+</div>
+</body>
+<script src="/js/plugins/jquery.uploadify.js"></script>
+<script src="/js/app.js"></script>
+<script>
+    $(function () {
+        debugger;
+        /*<![CDATA[*/
+        /**
+         * 上传文件
+         * */
+        $("#task_file").uploadify({
+            fileTypeExts:'*.xls;*.xlsx',
+            auto:true,
+            multi:false,
+            fileSizeLimit:5000000,
+            showUploadedPercent:true,
+            showUploadedSize:true,
+            removeTimeout:9999999,
+            queueSizeLimit : 1,
+            uploader:'/system/task/uploadfile',
+            onUploadComplete : function(file, data) {
+                $("#task-file").val(file.name);
+                $("#task-file-path").val(data);
+            }
+        });
+        /*]]>*/
+        // $('#submitForm').click(submitFile);
+    });
+
+    function submitFile() {
+        $.ajax({
+            url: '/system/task/uploadfile',
+            data: $('#newDataForm').serializeJson(),
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            async: false,
+            success: function (response) {
+                console.log(response);
+            },
+            error: function () {
+                console.log('操作失败');
+            }
+        });
+    }
+</script>
+</html>

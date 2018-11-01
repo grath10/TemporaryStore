@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultrag.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8"/>
+    <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>可拖拽式数据导入</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/AdminLTE.min.css"/>
+    <link rel="stylesheet" href="/js/plugins/bootstrap-fileinput/css/fileinput.min.css"/>
+    <script src="/js/thirdparty/jquery-2.2.3.min.js"></script>
+    <script src="/js/thirdparty/bootstrap.min.js"></script>
+</head>
+<body class="skin-blue hold-transition sidebar-mini sidebar-collapse">
+<div class="wrapper">
+    <div class="content-wrapper" id="main-content">
+        <section class="content container-fluid">
+            <div class="row">
+                <input type="button" class="btn btn-default" value="数据导入" data-toggle="modal" data-target="#data-import"/>
+            </div>
+        </section>
+    </div>
+    <div class="modal fade in" id="data-import" role="dialog" aria-labelledby="data-import" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title"><span class="glyphicon glyphicon-wrench"></span>数据导入</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" id="newDataForm" method="post" title="" novalidate="novalidate">
+                        <!--<div class="form-group">-->
+                            <!--<div class="row" style="margin-left: 5px;margin-top:5px;">-->
+                                <div class="file">
+                                    <input id="input-file" name="file" type="file" multiple/>
+                                </div>
+                                <div id="kartik-file-errors"></div>
+                            <!--</div>-->
+                        <!--</div>-->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitForm">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:replace="fragments/footer::footer" />
+</div>
+</body>
+<script src="/js/plugins/bootstrap-fileinput/js/fileinput.js"></script>
+<script src="/js/plugins/bootstrap-fileinput/js/locales/zh.js"></script>
+<script>
+    $(function () {
+        debugger;
+        /*<![CDATA[*/
+        /**
+         * 上传文件
+         * */
+        $("#input-file").fileinput({
+            language: 'zh',
+//            showPreview: false,
+            uploadAsync: false,
+            elErrorContainer: '#kartik-file-errors',
+            allowedFileExtensions: ['xls', 'xlsx'],
+            uploadUrl: '/system/task/uploadfile',
+            maxFileCount: 1,
+            mergeAjaxCallbacks: true,  // 关键配置项
+            ajaxSettings: {
+                beforeSend: function (xhr) {
+                    var token = $('#_csrf').attr('content');
+                    var header = $('#_csrf_header').attr('content');
+                    if (token && header) {
+                        xhr.setRequestHeader(header, token);
+                    }
+                }
+            }
+        }).on('fileuploaded', function(event, data, previewId, index) {
+
+        });
+        /*]]>*/
+    });
+</script>
+</html>
