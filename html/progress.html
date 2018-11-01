@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>信息平台事件处理进度条</title>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/daterangepicker.css"/>
+    <link rel="stylesheet" href="/css/font/font-awesome.min.css"/>
+    <link rel="stylesheet" href="/js/thirdparty/layui/css/layui.css"/>
+    <link rel="stylesheet" href="/js/plugins/jquery-datatables-checkboxes/css/dataTables.checkboxes.css"/>
+    <link rel="stylesheet" href="/js/plugins/ztree/css/zTreeStyle/zTreeStyle.css"/>
+    <link rel="stylesheet" href="/css/dataTables.bootstrap.css"/>
+    <link rel="stylesheet" href="/js/plugins/select2/css/select2.min.css"/>
+    <link rel="stylesheet" href="/js/plugins/toastr/toastr.css"/>
+    <link rel="stylesheet" href="/css/AdminLTE.min.css"/>
+    <link rel="stylesheet" href="/css/ystep.css"/>
+    <link rel="stylesheet" href="/css/skins/skin-blue.min.css"/>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <script src="/js/thirdparty/jquery-2.2.3.min.js"></script>
+    <script src="/js/thirdparty/bootstrap.min.js"></script>
+    <style>
+        .ztree * {
+            font-size: 14px;
+        }
+        .ztree li a:hover {
+            text-decoration:none !important;
+        }
+        body {
+            line-height: 1.42857143;
+        }
+    </style>
+</head>
+<body class="skin-blue hold-transition sidebar-mini sidebar-collapse">
+<div class="wrapper">
+    <div class="content-wrapper" id="main-content">
+        <section class="content container-fluid">
+            <div id="progress_steps" th:attr="status=${result.status},ct10=${result.ct10},ct20=${result.ct20},ct30=${result.ct30},ct40=${result.ct40},ct50=${result.ct50},ct60=${result.ct60}"></div>
+        </section>
+    </div>
+    <div th:replace="fragments/footer::footer" />
+</div>
+</body>
+<script src="/js/thirdparty/adminlte.min.js"></script>
+<script src="/js/plugins/select2/js/select2.full.js"></script>
+<script src="/js/plugins/select2/js/i18n/zh-CN.js"></script>
+<script src="/js/thirdparty/jquery.dataTables.js"></script>
+<script src="/js/thirdparty/dataTables.bootstrap.js"></script>
+<script src="/js/plugins/jquery-datatables-checkboxes/js/dataTables.checkboxes.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/tools.js"></script>
+<script src="/js/thirdparty/layui/layui.all.js"></script>
+<script src="/js/plugins/toastr/toastr.min.js"></script>
+<script src="/js/ystep.js"></script>
+<script>
+    $(function () {
+        var $step = $('#progress_steps');
+
+        $step.loadStep({
+            // ystep的外观大小，可选值：small,large
+            size: "large",
+            // ystep配色方案，可选值：green,blue
+            color: "green",
+            // ystep中包含的步骤
+            steps: [
+                {
+                    title: "新建",
+                    content: $step.attr('ct10')
+                }, {
+                    title: "派单",
+                    content: $step.attr('ct20')
+                }, {
+                    title: "接受",
+                    content: $step.attr('ct30')
+                }, {
+                    title: "完成",
+                    content: $step.attr('ct40')
+                }, {
+                    title: "评价",
+                    content: $step.attr('ct50')
+                }] 
+        });
+        $step.setStep($step.attr('status'));
+    });
+</script>
+</html>
