@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Tab面板</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/font/font-awesome.min.css"/>
+    <link rel="stylesheet" href="/js/plugins/toastr/toastr.css"/>
+    <script src="/js/thirdparty/jquery-2.2.3.min.js"></script>
+    <script src="/js/thirdparty/bootstrap.min.js"></script>
+</head>
+<body>
+    <ul id="myTab" class="nav nav-tabs">
+        <li class="active">
+            <a href="#home" data-toggle="tab">页面1</a>
+        </li>
+        <li>
+            <a href="#page" data-toggle="tab">页面2</a>
+        </li>
+    </ul>
+    <div id="myTabContent" class="tab-content">
+        <div class="tab-pane fade in active" id="home">
+            这是测试页面1显示的内容......
+        </div>
+        <div class="tab-pane fade in active" id="page">
+            这是测试页面2显示的内容......
+        </div>
+    </div>
+</body>
+<script src="/js/plugins/toastr/toastr.min.js"></script>
+</html>

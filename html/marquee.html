@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>走马灯及轮播效果图</title>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/font/font-awesome.min.css"/>
+    <link rel="stylesheet" href="/css/jquery.carousel.css" />
+    <script src="/js/thirdparty/jquery-2.2.3.min.js"></script>
+    <script src="/js/thirdparty/bootstrap.min.js"></script>
+    <style>
+        .marquee {
+            /*width: 300px; !* the plugin works for responsive layouts so width is not necessary *!*/
+            overflow: hidden;
+            border: 1px solid #ccc;
+        }
+
+         body,html{
+             width:100%;
+             min-width:700px;
+             height:100%;
+             border:none;
+             margin:0;
+             padding:25px;
+             box-sizing:border-box;
+         }
+        .display-flex{
+            display:flex;
+        }
+        .display-flex .flex{
+            flex:1;
+        }
+        .items{
+            box-sizing:border-box;
+            border-bottom:1px dashed #eee;
+            position:relative
+        }
+        /*.items:before{
+            content:attr(data-title);
+            font-size:12px;
+            background:#ccc;
+            display:inline-block;
+            position:absolute;
+            top:30px;
+            left:25px;
+            color:#fff;
+            padding:2px 5px;
+            border-radius:3px;
+            white-space: nowrap;
+        }*/
+        .pie-chart {
+            min-height: 700px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div style="width: 50%; height: 100%; float: left;">
+            <div class="marquee"></div>
+        </div>
+        <div style="width: 50%; height: 100%; float: left;">
+            <div class="display-flex">
+                <div class="items flex">
+                    <div class="carousel pie-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/js/thirdparty/echarts.min.js"></script>
+<script src="/js/plugins/jquery.carousel.js"></script>
+<script src="/js/plugins/jquery.marquee.min.js"></script>
+<script>
+    debugger;
+    function loadLatestData() {
+        $.ajax({
+            url: '/map/latest',
+            type: 'get',
+            async: false,
+            success: function (response) {
+                var str = '';
+                for(var i = 0; i < response.length; i++) {
+                    var result = response[i];
+                    str += result.happenTime + '&nbsp;&nbsp;&nbsp;' + result.elevator + '<br/>';
+                }
+                $('.marquee').html(str).marquee({
+                    //duration in milliseconds of the marquee
+                    duration: 2000,
+                    //gap in pixels between the tickers
+                    gap: 50,
+                    //time in milliseconds before the marquee will start animating
+                    delayBeforeStart: 0,
+                    //'left' or 'right'
+                    direction: 'up',
+                    //true or false - should the marquee be duplicated to show an effect of continues flow
+                    duplicated: true,
+                    pauseOnHover: true
+                });
+//                setTimeout(loadLatestData, 10000);
+            },
+            error: function () {
+                console.log('查询失败');
+            }
+        });
+    }
+
+    function showDynamicData(domainId) {
+        $.ajax({
+            url: '/map/overview',
+            type: 'get',
+            data: {
+                domainId: domainId
+            },
+            async: false,
+            success: function (response) {
+                var codeList = response.codeList;
+                var details = response.detailList;
+                createDynamicContainers(codeList, details);
+                var width = $('.pie-chart').width();
+                var height = $('.pie-chart').height();
+                $('.pie-chart').carousel({
+                    size:[width, height],
+                    arrow:{
+                        show: false
+                    },
+                    autoPlay: true,
+                    interval: 3000,
+                    speed: 500
+                });
+                /*setTimeout(function () {
+                    showDynamicData(domainId);
+                }, 60000);*/
+            },
+            error: function () {
+                console.log('查询失败');
+            }
+        });
+    }
+
+    function createDynamicContainers(codeList, detailList) {
+        var str = '';
+        var indexList = ['progress', 'domain', 'cost'];
+        for(var j = 1; j <= codeList.length; j++) {
+            var code = codeList[j - 1];
+            str += '<div class="carousel-item">'
+                + '<span style="color: #000000;">事件进度分布图</span><div id="progress' + code + '" style="width:400px; height: 200px;"></div>'
+                + '<span style="color: #000000;">下级区域统计分布图</span><div id="domain' + code + '" style="width:400px; height: 200px;"></div>'
+                + '<span style="color: #000000;">耗时分布图</span><div id="cost' + code + '" style="width:400px; height: 200px;"></div></div>';
+        }
+        $('.carousel').html(str);
+        for(var k = 0; k < detailList.length; k ++) {
+            var domainDetail = detailList[k];
+            for(var i = 0; i < domainDetail.length; i++) {
+                var oneDetail = domainDetail[i];
+                drawPie(indexList[i] + codeList[k], oneDetail);
+            }
+        }
+    }
+
+    function drawPie(id, values) {
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById(id));
+        var data = generateVals(values);
+        var option = {
+            tooltip: {
+                show: false,
+                trigger: 'item',
+                formatter: "{a}<br/>{b}: {c} ({d}%)"
+            },
+            legend: {
+                show: false,
+                orient: 'vertical',
+                x: 'left',
+                data: data.legend
+            },
+            series: [
+                {
+                    type:'pie',
+                    center: ['60%', '50%'],
+                    radius: ['50%', '70%'],
+                    avoidLabelOverlap: true,
+                    silent: true,
+                    label: {
+                        normal: {
+                            show: true,
+                            formatter: '{b}: {c}'
+                        },
+                        emphasis: {
+                            show: true,
+                            textStyle: {
+                                fontSize: '30',
+                                fontWeight: 'bold'
+                            }
+                        }
+                    },
+                    data: data.value
+                }
+            ]
+        };
+        // 使用刚指定的配置项和数据显示图表
+        myChart.setOption(option);
+    }
+
+    function generateVals(values) {
+        var valArr = [];
+        var legendArr = [];
+        for(var key in values) {
+            valArr.push({
+                name: key,
+                value: values[key]
+            });
+            legendArr.push(key);
+        }
+        return {
+            value: valArr,
+            legend: legendArr
+        };
+    }
+
+    loadLatestData();
+    showDynamicData('320000');
+</script>
+</html>
