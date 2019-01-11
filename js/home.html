@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+    <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>大屏监控</title>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <link rel="stylesheet" href="/css/bootstrap/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/font/font-awesome.min.css"/>
+    <link rel="stylesheet" href="/js/plugins/toastr/toastr.css"/>
+    <link rel="stylesheet" href="/css/map_home.css" />
+    <script src="/js/thirdparty/jquery-2.2.3.min.js"></script>
+    <script src="/js/thirdparty/bootstrap.min.js"></script>
+    <script src="http://api.map.baidu.com/api?v=3.0&amp;ak=QDlNcDMqLjrDv4MshNLH4kD3eVsnEvQm"></script>
+</head>
+<body>
+    <div class="mappage-wrap">
+        <!-- 顶部导航  -->
+        <div class="mapHeader-wrap">
+            <!-- 筛选项 -->
+            <div class="mapHeader-filter">
+                <div class="sel-box sel-type" id="sel-type" style="z-index:1;">
+                    <label>电梯主题：</label>
+                    <input type="radio" name="sel-type" value="0" />电梯
+                    <input type="radio" name="sel-type" value="1" checked="checked" />救援
+                    <input type="radio" name="sel-type" value="2"  />维修
+                    <input type="radio" name="sel-type" value="3" />保养
+                </div>
+                <a class="link-logout filter-a" href="/logout"><i class="fa fa-power-off"></i></a>
+            </div>
+        </div>
+        <!-- 内容区域  -->
+        <div class="map-wrap">
+            <!-- 地图区域 -->
+            <div class="map-bmap-wrap">
+                <div class="bmap-cover" id="loading-cover" style="display:block;"></div>
+                <!-- 地图容器 -->
+                <div id="allmap" class="bmap-container" style="overflow: hidden; background-color: rgb(243, 241, 236); color: rgb(0, 0, 0); text-align: left; z-index: 0;"></div>
+                <span class="fold-btn-icon" id="fold-btn" style="display: none;">
+                    <i class="mapicon"></i>
+                </span>
+                <div class="listinfo listinfo-open" id="map-list" style="display: none;">
+                    <div class="list-contents">
+                        <div class="collapse-top"></div>
+                        <div class="collapse-bottom">
+                            <div class="chart">
+                                <div id="bar-chart" style="width: 360px;height: 200px;"></div>
+                                <div id="cost-bar-chart" style="width: 360px;height: 200px;"></div>
+                            </div>
+                            <div class="event-content notSeen"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="videoPanel" tabindex="-1" role="dialog" aria-labelledby="videoPanel" aria-hidden="true">
+        <div class="modal-dialog" style="width:630px;margin-left:250px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"><span>实时预览</span><input id="ip" style="display: none"/></h4>
+                </div>
+                <div class="modal-body">
+                    <div id="modal-content">
+                        <div id="divPlugin" class="plugin"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input class="btn" id="login-device" onclick="loginDevice();" type="button" value="登录设备" />
+                    <input class="btn" id="start-play" onclick="clickStartRealPlay();" type="button" disabled="disabled" value="开始预览" />
+                    <input class="btn" id="stop-play" onclick="clickStopRealPlay();" type="button" disabled="disabled" value="停止预览" />
+                    <input class="btn" id="start-talk" onclick="clickStartVoiceTalk();" type="button" disabled="disabled" value="开始对讲" />
+                    <input class="btn" id="stop-talk" onclick="clickStopVoiceTalk();" type="button" disabled="disabled" value="停止对讲" />
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="/js/startUp.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/tools.js"></script>
+<script src="/js/thirdparty/webVideoCtrl.js"></script>
+<script src="/js/operation.js"></script>
+<script src="/js/plugins/toastr/toastr.min.js"></script>
+<script src="/js/plugins/sockjs/sockjs.min.js"></script>
+<script src="/js/plugins/stomp/stomp.min.js"></script>
+<script src="/js/plugins/CustomOverlay.js"></script>
+<script src="/js/plugins/squareOverlay.js"></script>
+<script src="/js/plugins/CustomShapeOverlay.js"></script>
+<script src="/js/plugins/rescueOverlay.js"></script>
+<script src="/js/plugins/mock.js"></script>
+<script src="/js/thirdparty/echarts.min.js"></script>
+<script src="/js/mapGis.js"></script>
+</html>

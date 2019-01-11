@@ -1,0 +1,594 @@
+$(function () {
+    debugger;
+    // 检查插件是否已经安装过
+    var iRet = WebVideoCtrl.I_CheckPluginInstall();
+    if (-2 == iRet) {
+        alert("Chrome浏览器版本过高，不支持NPAPI插件!");
+        return;
+    } else if (-1 == iRet) {
+        alert("未安装过插件，双击开发包目录里的WebComponentsKit.exe安装!");
+        return;
+    }
+
+    var oPlugin = {
+        iWidth: 600,			// plugin width
+        iHeight: 400			// plugin height
+    };
+    // 初始化插件参数及插入插件
+    WebVideoCtrl.I_InitPlugin(oPlugin.iWidth, oPlugin.iHeight, {
+        bWndFull: true,//是否支持单窗口双击全屏，默认支持 true:支持 false:不支持
+        iWndowType: 1,
+        cbSelWnd: function (xmlDoc) {}
+    });
+    WebVideoCtrl.I_InsertOBJECTPlugin("divPlugin");
+
+    // 检查插件是否最新
+    if (-1 == WebVideoCtrl.I_CheckPluginVersion()) {
+        alert("检测到新的插件版本，双击目录里的WebComponentsKit.exe升级!");
+        return;
+    }
+
+    // 关闭浏览器
+    $(window).unload(function () {
+        WebVideoCtrl.I_Stop();
+    });
+
+    queryPOI('江苏省', '320200');
+
+    $('#fold-btn').click(function() {
+        $('#map-list').toggleClass("listinfo-open");
+        var btnPosition = $('#fold-btn').css("right");
+        if(btnPosition == '0px') {
+            $('#fold-btn').css("right", "365px");
+            $('.mapicon').removeClass('fold-icon');
+        } else {
+            $('#fold-btn').css("right", "0px");
+            $('.mapicon').addClass('fold-icon');
+        }
+    });
+});
+
+//最小级zoom，省级zoom
+const ZOOM_PROVINCE_LEVEL = 5;
+//市级zoom
+const ZOOM_CITY_LEVEL = 8;
+//区县级zoom
+const ZOOM_DISTRICT_LEVEL = 12;
+//缩放最大级别 zoom
+const ZOOM_MAX_LEVEL = 18;
+//当前zoom级别
+var current_zoom = ZOOM_CITY_LEVEL;
+
+//省市区县级别
+const LEVEL_PROVINCE = 1;
+const LEVEL_CITY = 2;
+const LEVEL_DISTRICT = 3;
+const LEVEL_POINT = 4;
+
+// 创建Map实例
+// 构造地图时，关闭地图可点功能
+var map = new BMap.Map("allmap", {
+    enableMapClick: false,
+    minZoom: ZOOM_CITY_LEVEL,
+    maxZoom: ZOOM_MAX_LEVEL
+});
+bindZoomListener(map);
+/*
+var opts = {
+    type: BMAP_NAVIGATION_CONTROL_SMALL
+};
+map.addControl(new BMap.NavigationControl(opts));
+map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
+*/
+
+/**
+ * 自定义鼠标滚轮事件
+ * 初始化zoom缩放监听事件
+ */
+function bindZoomListener(map) {
+    var flag = true;
+    const scrollFunc = function (e) {
+        var center = map.getCenter();
+        var current_zoom = map.getZoom();
+        if(flag) {
+            flag = false;
+            setTimeout(function () {
+                var isUp = false;
+                //IE/Opera/Chrome 的滚轮判断为wheelDelta = +- 120 ，firefox的滚轮判断为detail = +- 3
+                //+120为放大，-120为缩小 -3为放大，+3为缩小
+                if(e.wheelDelta) {
+                    if (e.wheelDelta == 120) {
+                        isUp = true;
+                    }
+                }else if(e.detail) { // firefox
+                    if(e.detail == -3){
+                        isUp = true;
+                    }
+                }
+                // 地图放大
+                if(isUp) {
+                    // 全省视图 -> 全市视图
+                    /*if(current_zoom == ZOOM_CITY_LEVEL) {
+                        var offsetPoint = new BMap.Pixel(e.offsetX, e.offsetY);
+                        var targetPoint = map.pixelToPoint(offsetPoint);
+                        getTargetInfo(true, targetPoint, undefined, 2);
+                    } else if(current_zoom == ZOOM_DISTRICT_LEVEL) {
+                        // getTargetInfo(true, center, undefined, 3);
+                    }*/
+                } else {
+                    if(current_zoom == ZOOM_MAX_LEVEL) {
+                        getTargetInfo(false, center, undefined, 2);
+                    } else if(current_zoom == ZOOM_DISTRICT_LEVEL) {
+                        getTargetInfo(false, center, undefined, 1);
+                    }
+                }
+                flag = true;
+            }, 300);
+        }
+    };
+    var userAgent = navigator.userAgent;
+    var isFirefox = userAgent.indexOf("Firefox") > -1; //判断是否Firefox浏览器
+    if(isFirefox){
+        document.addEventListener('DOMMouseScroll',scrollFunc,false);
+    }else{
+        window.onmousewheel = document.onmousewheel = scrollFunc;  //IE/Opera/Chrome
+    }
+}
+
+// 根据当前行政区域层次显示下一层级信息  省-->市，市/区县——>电梯事件信息
+/**
+ * 通过名称或者区域编码检索相关信息
+ * @param name  区域名称
+ * @param code  区域编码
+ */
+function queryPOI(name, code) {
+    /*var prefix = getAreaPrefix(type, code);
+    $.ajax({
+        url: '/map/find',
+        data: {
+            type: type,
+            name: prefix
+        },
+        type: 'get',
+        async: false,
+        success: function (response) {
+            return buildBaiduMap(isDrilled, response, name, type + 1, cp);
+        },
+        error: function () {
+            console.log('查询失败');
+        }
+    })*/
+    getTargetInfo(false, name, code);
+}
+
+function getAreaPrefix(type, code) {
+    var prefix = '';
+    if(type == 1) {
+        prefix = code.substring(0, 2);
+    } else if(type == 2) {
+        prefix = code.substring(0, 4);
+    } else {
+        prefix = code;
+    }
+    return prefix;
+}
+
+// 根据所属市级区域获取对应详细数据
+/**
+ * @param result (包含信息：电梯名称、已耗时)
+ */
+function getSideBarDetail(result) {
+    var html = '';
+    for(var i = 0; i < result.length; i++) {
+        var one = result[i];
+        var timeExpense = Mock.Random.integer(0, 25);
+        var longitude = one['longitude'], latitude = one['latitude'],
+            markerName = one['name'],
+            remark = one['remark'],
+            color = getColorByState(remark);
+        html += '<div class="item-mod" data-longitude="' + longitude + '" data-latitude="' + latitude + '" onclick="focusOnPoint('
+            + longitude + ',' + latitude + ',\'' + markerName + '\')"><div class="item-info"><p style="color:' + color + '">电梯名称：' + markerName
+            + '</p><p style="color: ' + color + '">已耗时(min)：' + timeExpense + '</p></div></div>';
+    }
+    $(".collapse-top").html(html);
+    $('#chart').removeClass('notSeen');
+    $(".event-content").addClass('notSeen');
+    // 获取月度救援量、平均耗时
+    var xAxis = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    var values = [2, 4, 7, 23, 25, 76, 135, 162, 32, 20, 6, 3];
+    drawBar('bar-chart', xAxis, '月度救援量', values);
+    var xAxis = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    var values = [22.0, 24.9, 27.0, 23.2, 25.6, 26.7, 35.6, 22.2, 32.6, 20.0, 26.4, 23.3];
+    drawBar('cost-bar-chart', xAxis, '月度平均到场耗时', values);
+}
+
+function focusOnPoint(longitude, latitude, markerName) {
+    var nodes = document.getElementsByClassName("item-mod");
+    for(var i = 0; i < nodes.length;i++) {
+        var node = nodes[i];
+        if(node.dataset.longitude == longitude && node.dataset.latitude == latitude) {
+            $(node).addClass('highlight');
+        } else {
+            $(node).removeClass('highlight');
+        }
+    }
+    var cp = new BMap.Point(longitude, latitude);
+    map.centerAndZoom(cp, 18);
+    // 根据事件编号获取详细事件信息
+    var eventId = Mock.Random.id();
+    var result = {
+        "elevname":"鸿运苑六二期532单元右梯",
+        "question":"移动端报警",
+        "creatorid":137,
+        "elevId":405,
+        "notifytime":"2018-05-21 11:17:06",
+        "closetime":"2018-05-21 11:20:46",
+        "type":"2",
+        "usedtime":3,
+        "providername":"无锡智泉科技有限公司",
+        "codeid":59,
+        "ticketnum":"JY20180521-405-1",
+        "id":60532,
+        "creationtime":"2018-05-21 11:17:06",
+        "custname":"鸿运苑第二社区",
+        "status":"6",
+        "spenttime":3
+    };
+    // 联动右侧下方数据
+    var msg = '<div class="event-mod" data-longitude="' + longitude + '" data-latitude="' + latitude + '">'
+        + '<div class="event-info"><p>电梯名称：' + markerName
+        + '</p><p>事件编号：' + result.ticketnum + '</p><p>已耗时(min)：' + result.spenttime + '</p><p>事件状态：'
+        + result.status + '</p><p>新建时间：' + result.creationtime + '</p></div></div>';
+    $('#chart').addClass('notSeen');
+    $(".event-content").html(msg);
+}
+
+// 在省层次(或者直辖市)上展示数据
+function renderTopLevelView(name, result) {
+    // 清除历史覆盖物
+    map.clearOverlays();
+    map.centerAndZoom(name, 8);
+    hideSidebar();
+    getBoundaryAndColor(map, name);
+    var point;
+    for (var i = 0; i < result.length; i++) {
+        var one = result[i], marker;
+        var longitude = one['longitude'], latitude = one['latitude'],
+            markerName = one['name'],
+            remark = one['remark'],
+            type = one['type'],
+            areacode = one['code'];
+        point = new BMap.Point(longitude, latitude);
+        var perf = '当前救援量：' + Mock.Random.integer(60, 100) + ', 当月救援量：' + Mock.Random.integer(100, 1000);
+        var color = getColorByState(remark);
+        marker = new SquareOverlay(point, markerName, type, areacode, perf, color);
+        map.addOverlay(marker);
+    }
+    $("#loading-cover").css('display', 'none');
+}
+
+// 在市层次上展示数据
+function renderSecondaryView(name, result) {
+    // 清除历史覆盖物
+    map.clearOverlays();
+    showSidebar();
+    getSideBarDetail(result);
+    map.centerAndZoom(name, 12);
+    var point;
+    for (var i = 0; i < result.length; i++) {
+        var one = result[i], marker;
+        var longitude = one['longitude'], latitude = one['latitude'],
+            markerName = one['name'],
+            remark = one['remark'];
+        point = new BMap.Point(longitude, latitude);
+        var timeExpense = Mock.Random.integer(0, 25);
+        marker = new RescueOverlay(point, 'images/cursor.png', markerName, remark, timeExpense);
+        map.addOverlay(marker);
+    }
+    $("#loading-cover").css('display', 'none');
+}
+
+/**
+ *
+ * @param isDrilled  下钻标志位
+ * @param result  获取信息点集合
+ * @param name
+ * @param level 当前行政区域级别
+ * @param cp  中心坐标点
+ * @param name 区域名称(适用于省、市、区)
+ */
+function renderView(isDrilled, result, level, name) {
+    if (isDrilled) {
+        renderSecondaryView(name, result);
+    } else {
+        if (level == LEVEL_CITY) {
+            renderTopLevelView(name, result);
+        } else if (level == LEVEL_POINT) {
+            renderSecondaryView(name, result);
+        }
+    }
+}
+
+function getTargetInfo (isDrilled, center, code, level) {
+    // 根据中心点坐标反向推断出行政区域名称
+    // 创建地理编码实例
+    var myGeo = new BMap.Geocoder();
+    if(center instanceof BMap.Point){
+        // 根据中心点坐标得到地址描述
+        myGeo.getLocation(center, function(result){
+            if (result){
+                var addComp = result.addressComponents;
+                var name = determineCurrentName(addComp.province, addComp.city, addComp.district, level);
+                var areacode = getAreacodeByName(name);
+                getInfoByNameOrCode(isDrilled, name, areacode);
+            }
+        });
+    } else {
+        getInfoByNameOrCode(isDrilled, center, code);
+    }
+}
+
+function getAreacodeByName(name) {
+    var code = '';
+    if(name == '无锡市') {
+        code = '320200';
+    } else if(name == '南京市') {
+        code = '320100';
+    }
+    return code;
+}
+
+function determineCurrentName(province, city, district, level) {
+    var name = "";
+    switch (level) {
+        case 1:
+            name = province;
+            break;
+        case 2:
+            name = city;
+            break;
+        case 3:
+            name = district;
+            break;
+        default:
+            name = province;
+            break;
+    }
+    return name;
+}
+
+function getInfoByNameOrCode(isDrilled, name, code) {
+    var response = [], level;
+    // 根据信息从后台获取相应数据，查询关键字：name/code
+    if(name == '江苏省') {
+        response = [{
+            "longitude": "120.318582",
+            "latitude": "31.501027",
+            "name": "无锡市",
+            "remark": "2",
+            "type": 2,
+            "code": "320200"
+        }, {
+            "longitude": "118.799547",
+            "latitude": "32.065386",
+            "name": "南京市",
+            "remark": "1",
+            "type": 2,
+            "code": "320100"
+        }];
+        level = 2;
+    } else if (code === '320200'){
+        response = [{
+            "longitude": "120.489331",
+            "latitude": "31.501153",
+            "name": "鸿运苑第一社区-364#",
+            "remark": "2",
+            "type": 4,
+            "code": "320200"
+        }, {
+            "longitude": "120.489839",
+            "latitude": "31.502023",
+            "name": "鸿运苑第一社区北苑",
+            "remark": "1",
+            "type": 4,
+            "code": "320200"
+        }, {
+            "longitude": "120.490418",
+            "latitude": "31.502331",
+            "name": "鸿运苑第一社区-349#",
+            "remark": "3",
+            "type": 4,
+            "code": "320200"
+        }];
+        level = 4;
+    }
+    renderView(isDrilled, response, level, name);
+}
+
+function showSidebar() {
+    $("#fold-btn").css("display", "block");
+    $("#map-list").css("display", "block");
+}
+
+function hideSidebar() {
+    $("#fold-btn").css("display", "none");
+    $("#map-list").css("display", "none");
+}
+
+function getColorByState(state) {
+    var color;
+    switch(state) {
+        case '1':
+            color = '#F54336';   // 新建
+            break;
+        case '2':
+            color = '#FF9F3A';  // 响应
+            break;
+        case '3':
+            color = '#2B81FF';  // 到场
+            break;
+        case '4':
+            color = '#808080';  // 无救援
+            break;
+        default:
+            color = '#40AA24';  // 完成救援
+            break;
+    }
+    return color;
+}
+
+/**
+ * 按事件进度组成的饼图、按下级区划组成的饼图、按已耗时10分钟一档的饼图
+ * @param areacode
+ */
+function getStatistics(areacode) {
+    // 根据当前区域areacode获取以下信息
+    drawPie('progress' + areacode, ['新建', '响应', '到场', '完成救援'], [Mock.Random.integer(0, 10), Mock.Random.integer(0, 20), Mock.Random.integer(0, 30), Mock.Random.integer(0, 40)], '事件进度分布图');
+    drawPie('domain' + areacode, ['区域1', '区域2', '区域3', '区域4'], [63, 24, 56, 32], '下级区域统计分布图');
+    drawPie('cost' + areacode, ['<10分钟以内', '10分钟~20分钟', '20分钟~30分钟', '>30分钟'], [10, 20, 30, 40], '已耗时分布图');
+}
+
+/**
+ *
+ * @param legendData  图例，类型：数组
+ * @param dataArr  具体取值，类型：对象数组
+ */
+function drawPie(id, legendData, values, title) {
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById(id));
+    var dataArr = generateVals(legendData, values);
+    var option = {
+        tooltip: {
+            trigger: 'item',
+            formatter: "{a}<br/>{b}: {c} ({d}%)"
+        },
+        legend: {
+            orient: 'vertical',
+            x: 'left',
+            data: legendData
+        },
+        series: [
+            {
+                name: title,
+                type:'pie',
+                radius: ['50%', '70%'],
+                avoidLabelOverlap: false,
+                label: {
+                    normal: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        show: true,
+                        textStyle: {
+                            fontSize: '30',
+                            fontWeight: 'bold'
+                        }
+                    }
+                },
+                labelLine: {
+                    normal: {
+                        show: false
+                    }
+                },
+                data: dataArr
+            }
+        ]
+    };
+    // 使用刚指定的配置项和数据显示图表
+    myChart.setOption(option);
+}
+
+function generateVals(keys, values) {
+    var arr = [];
+    for(var i = 0; i < keys.length; i++) {
+        arr.push({
+            value: values[i],
+            name: keys[i]
+        })
+    }
+    return arr;
+}
+
+function drawBar(id, xAxisArr, name, values) {
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(document.getElementById(id));
+    var option = {
+        tooltip : {
+            trigger: 'axis'
+        },
+        legend: {
+            data:[name]
+        },
+        calculable : true,
+        xAxis : [
+            {
+                type : 'category',
+                data : xAxisArr
+            }
+        ],
+        yAxis : [
+            {
+                type : 'value'
+            }
+        ],
+        series : [
+            {
+                name: name,
+                type: 'bar',
+                data: values,
+                markPoint : {
+                    data : [
+                        {type : 'max', name: '最大值'},
+                        {type : 'min', name: '最小值'}
+                    ]
+                },
+                markLine : {
+                    data : [
+                        {type : 'average', name: '平均值'}
+                    ]
+                }
+            }
+        ]
+    };
+    myChart.setOption(option);
+}
+
+/**
+ * 添加行政区边框
+ * @param map
+ * @param args 行政区域名称数组，以百度地图标准行政区域名称为主
+ * @param isAlwaysShow 是否持续显示，默认为false
+ * @param strokeColor 边框线条颜色，填入颜色编码，默认为#ff9a39
+ * @param fillColor 覆盖物背景色，填入颜色编码，默认为无色透明
+ */
+function getBoundaryAndColor(map, name, isAlwaysShow, fillColor, strokeWeight, strokeColor) {
+    strokeColor = strokeColor || "#ff4700";
+    if(fillColor == null){
+        fillColor = "#61dcff";
+    }
+    isAlwaysShow = isAlwaysShow || false;
+    strokeWeight = strokeWeight || 2;
+    //通过行政区域名称获取行政区划
+    var bdary = new BMap.Boundary();
+    bdary.get(name, function (rs) {
+        var count = rs.boundaries.length;
+        if (count === 0) {
+            return;
+        }
+        // var pointArray = [];
+        for (var i = 0; i < count; i++) {
+            var polygon = new BMap.Polygon(rs.boundaries[i], {
+                strokeColor: strokeColor,
+                fillColor: fillColor,
+                strokeWeight: strokeWeight
+            });
+            if (isAlwaysShow) {
+                polygon.disableMassClear();
+            }
+            map.addOverlay(polygon);
+            // pointArray = pointArray.concat(polygon.getPath());
+        }
+        // map.setViewport(pointArray);    //调整视野
+    });
+}
