@@ -1,0 +1,302 @@
+<html>
+    <head lang="en">
+        <meta charset="UTF-8">
+        <title></title>
+        <style>
+            .txt_content {
+                line-height: 30px;
+                padding: 0px 45px;
+                font-size: 13px;
+                margin-top: 20px;
+            }
+
+            #step {
+                margin-top: 10px;
+            }
+
+            #step a {
+                display: inline-block;
+                line-height: 34px;
+                width: 238px;
+                /*text-align:center;*/
+                position: relative;
+                margin-right: 34px;
+                background-color: #e9e9e9;
+                font-size: 14px;
+                color: #9f9f9f;
+                border-radius: 4px;
+                padding-left: 5px;
+                padding-right: 10px
+            }
+
+            #step i, #step b {
+                width: 0;
+                height: 0;
+                line-height: 0;
+                font-size: 0;
+                position: absolute;
+                top: 0
+            }
+
+            #step i {
+                border: 17px solid #e9e9e9;
+                border-left-color: transparent;
+                _border-left-color: snow;
+                _filter: chroma(color=snow);
+                left: -32px
+            }
+
+            #step b {
+                border: 17px solid #FFF;
+                border-left-color: #e9e9e9;
+                right: -32px;
+            }
+
+            #step .first i, #step .last b {
+                border: 17px solid #e9e9e9;
+            }
+
+            #step .current i {
+                border: 17px solid #aade65;
+                border-left-color: transparent;
+                _border-left-color: snow;
+                _filter: chroma(color=snow);
+            }
+
+            #step .first i, #step .last b {
+                display: none
+            }
+
+            #step .current b {
+                border-left-color: #aade65;
+            }
+
+            #step a.current {
+                background-color: #aade65;
+                color: #fff;
+            }
+
+            #step a.first {
+                padding-left: 20px;
+            }
+
+            #step a.last {
+                padding-right: 0;
+                margin: 0;
+            }
+
+            .txt_content #step .current {
+                background-color: #70cfda
+            }
+
+            .txt_content #step .current b {
+                border-left-color: #70cfda
+            }
+
+            .txt_content #step .current i {
+                border: 17px solid #70cfda;
+                border-left-color: transparent;
+                _border-left-color: snow;
+                _filter: chroma(color=snow);
+            }
+
+            a, a:link {
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+            a:hover {
+                text-decoration: none;
+            }
+
+            .mailCheck {
+                width: 720px;
+                margin: 35px auto 0;
+                padding: 0px 0px 10px 0px;
+            }
+
+            .mailCheckStep {
+                padding-top: 35px
+            }
+
+            #mail_step2, #mail_step2_5, #mail_step3, #mail_step4 {
+                display: none;
+            }
+
+            .mail_info {
+                margin-left: 65px;
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="txt_content">
+            <div id="step">
+                <a href="#" class="first" id="progressStep01" style="cursor:default;">
+                    <i></i>
+                    填写登录名
+					<b></b>
+                </a>
+                <a href="#" class="current" id="progressStep02" style="cursor:default;">
+                    <i></i>
+                    验证身份
+					<b></b>
+                </a>
+                <a href="#" class="" id="progressStep03" style="cursor:default;">
+                    <i></i>
+                    修改密码
+					<b></b>
+                </a>
+                <a href="#" class="last" id="progressStep04" style="cursor:default;">
+                    <i></i>
+                    完成
+					<b></b>
+                </a>
+            </div>
+            <div class="mailCheck" id="mail_step1">
+                <div class="mailCheckStep">
+                    <form class="form-horizontal" id="findpwdone" name="findpwdone" novalidate="novalidate">
+                        <div class="control-group">
+                            <span class="control-label" for="inputMobilenum">手机号
+							</span>
+                            <div class="controls" id="mobilenum_find">
+                                <input type="text" id="mobilenum" name="mobilenum" maxlength="200">
+                                <font style="color:red">&nbsp;*
+								</font>
+                                <span class="help-block" id="mobilenumerror" style="display:none"></span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <span class="control-label" for="inputPassword">验证码
+							</span>
+                            <div class="controls" id="auth_safecode">
+                                <input type="text" id="safecode" name="safecode" maxlength="6">
+                                <font style="color:red">&nbsp;*
+								</font>
+                                <img alt="" title="点击更新验证码" id="checkCode" onclick="upsafecode('checkCode','safecode')" style="margin-top:1px;">
+                                <a style="cursor:pointer" onclick="upsafecode('checkCode','safecode')" class="ml10">点击更换
+								</a>
+                            </div>
+                        </div>
+                        <div class="control-group mt30">
+                            <label class="control-label"></label>
+                            <div class="controls">
+                                <button class="btn btn-danger btn-large" type="submit" id="subLoginName">下一步
+								</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="mailCheck" id="mail_step2">
+                <div class="mailCheckStep">
+                    <form action="" class="form-horizontal">
+                        <div class="control-group">
+                            <span class="control-label">请您选择找回密码的方式
+							</span>
+                            <select id="findpwdtype" name="findpwdtype" onchange="findPwd.changefindtype(this.value)" class="input-small">
+                            <!-- <option value="01">手机</option>
+								<option value="02">邮箱</option> -->
+                            </select>
+                        </div>
+                    </form>
+                    <form class="form-horizontal" id="authuser" name="authuser" novalidate="novalidate">
+                        <div id="forPhone"></div>
+                        <div id="forMail"></div>
+                    </form>
+                </div>
+            </div>
+            <div class="mailCheck" id="mail_step2_5">
+                <div class="mailCheckTip mail_send">
+                    <span class="mail_info">
+                        邮件已发送到您的邮箱，
+						<span id="hismail"></span>
+                        请按照邮件中的提示操作。
+                    </span>
+                </div>
+                <button class="btn btn-danger btn-large ml65 mt25 " onclick="findPwd.loginemail()">立即查收邮件
+				</button>
+                <br>
+                <br>
+                <span class="mail_info">对于非常见邮箱，如公司邮箱，点击按钮可能无法帮你打开邮箱登录页面。
+				</span>
+                <div class="hr_line mt25"></div>
+                <p class="ml65">一直没有收到邮件？
+				</p>
+                <p class="ml65">
+                    请先检查是否在垃圾邮件中。如果还未收到，请在倒计时结束后点击按钮重新发送。
+					<button class="btn  ml10" id="resendemail"></button>
+                </p>
+            </div>
+            <div class="mailCheck" id="mail_step3">
+                <div class="mailCheckStep">
+                    <form class="form-horizontal" id="resetp" name="resetp" novalidate="novalidate">
+                        <div class="control-group">
+                            <span class="control-label">用户名
+							</span>
+                            <span align="left" id="loginname"></span>
+                        </div>
+                        <div class="control-group" id="showpasswd">
+                            <span class="control-label" for="inputUserPassword">新密码
+							</span>
+                            <div class="controls" id="newpasswordrule">
+                                <input type="password" id="newpassword" name="newpassword" maxlength="20" onkeyup="value=value.replace(/\s/g,'')">
+                                <font style="color:red">&nbsp;*
+								</font>
+                                <span class="help-block">
+                                    <span class="fl" style="width:59px;   color:#696969;">安全程度
+									</span>
+                                    <ul class="pwdSafeLevel">
+                                        <li style="background-color: rgb(196, 196, 196);color:white;" id="L_level">低
+										</li>
+                                        <li style="background-color: rgb(196, 196, 196);color:white;" id="M_level">中
+										</li>
+                                        <li style="background-color: rgb(196, 196, 196);color:white;" id="H_level">高
+										</li>
+                                    </ul>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <span class="control-label" for="inputPassword">确认密码
+							</span>
+                            <div class="controls" id="checkpasswordrule">
+                                <input type="password" name="checkpassword" maxlength="20" id="checkpassword" onkeyup="value=value.replace(/\s/g,'')">
+                                <font style="color:red">&nbsp;*
+								</font>
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+                        <div class="control-group mt30">
+                            <label class="control-label"></label>
+                            <div class="controls">
+                                <button class="btn btn-danger btn-large" type="submit" id="resetuserpwd">确定
+								</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="mailCheck" id="mail_step4" style="margin-right:160px;">
+                <form id="gotologinfrom" method="post" action="">
+                    <input id="service" type="hidden" name="service" value="">
+                    <input id="renew" type="hidden" name="renew" value="false">
+                    <input id="appid" type="hidden" name="appid" value="BAS-0512-0001">
+                    <input id="siteid" type="hidden" name="siteid" value="210500">
+                    <input id="myLocalService" type="hidden" name="myLocalService" value="">
+                    <div class="pwd_change">恭喜，您的密码已成功修改。
+					</div>
+                    <input type="hidden" name="findpwd_code" value="mobile" id="findpwd_code">
+                    <input type="hidden" name="findpwd_typekey" value="mobile" id="findpwd_typekey">
+                    <input type="hidden" name="findpwd_type" value="mobile" id="findpwd_type">
+                    <input type="hidden" name="username" value="" id="username">
+                    <input type="hidden" id="password" value="" name="password">
+                    <div class="pwdToLogin" id="iframeJs">
+                        <a class="btn btn-danger btn-large" href="javascript:void(0)" onclick="findPwd.gotologin();" id="gotologin">返回并登录
+						</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,436 @@
+<html>
+    <head lang="en">
+        <meta charset="UTF-8">
+        <title></title>
+        <style>
+            .schedule {
+                padding: 0 60px;
+                margin: 60px auto 0;
+            }
+
+            .item {
+                margin-top: 56px;
+                height: 42px;
+                line-height: 42px;
+                position: relative;
+                margin-left: 119px;
+            }
+
+			body {
+    font: 12px/1.231 "Microsoft YaHei", arial, helvetica, clean, sans-serif;
+    color: #333;
+}
+
+*{
+    box-sizing: border-box;
+}
+
+            .clearfix {
+                *zoom: 1; }
+
+            .dot {
+                float: left;
+                width: 14px;
+                height: 14px;
+                margin-top: 24px;
+                background: url(./images/dot-gray.png) no-repeat;
+                background-position: center;
+            }
+
+            .dot.cur {
+                background: url(./images/dot-blue.png) no-repeat;
+                background-position: center;
+            }
+
+            .cirque {
+                position: relative;
+                font-weight: bold;
+                float: left;
+                width: 62px;
+                height: 62px;
+                line-height: 62px;
+                font-size: 16px;
+                color: #666;
+                text-align: center;
+                margin-left: 120px;
+                background: url(./images/cirque-gray.png) no-repeat;
+                background-position: center;
+            }
+
+            .cirque:after {
+                position: absolute;
+                display: inline-block;
+                width: 78px;
+                bottom: 0px;
+                left: -7px;
+                text-align: center;
+                font-size: 15px;
+                margin-bottom: -55px;
+                color: #333;
+                font-weight: normal;
+            }
+
+            .cirque.cur:after {
+                color: #0068b7;
+            }
+
+            .first-step:after {
+                content: "注册须知";
+            }
+
+            .second-step:after {
+                content: "账户信息";
+            }
+
+            .third-step:after {
+                content: "个人信息";
+            }
+
+            .fourth-step:after {
+                content: "完成";
+            }
+
+            .dot.last {
+                position: relative;
+                width: 14px;
+                height: 14px;
+                margin-top: 24px;
+                margin-left: 120px;
+                background: url(./images/dot-gray.png) no-repeat;
+                background-position: center;
+            }
+
+            .dot.last.cur {
+                background: url(./images/dot-blue.png) no-repeat;
+                background-position: center;
+            }
+
+            .dot.last:before {
+                display: block;
+                position: absolute;
+                top: 50%;
+                left: 0;
+                margin-left: -120px;
+                width: 125px;
+                height: 1px;
+                content: "";
+                background: #dfdfdf;
+            }
+
+            .dot.last.cur:before {
+                display: block;
+                position: absolute;
+                top: 50%;
+                left: 0;
+                margin-left: -120px;
+                width: 120px;
+                height: 1px;
+                content: "";
+                background: #0068b7;
+            }
+
+            .cirque.cur {
+                background: url(./images/cirque-blue.png) no-repeat;
+                background-position: center;
+                color: #fff;
+            }
+
+            .cirque:before {
+                display: block;
+                position: absolute;
+                top: 50%;
+                left: 0;
+                margin-left: -120px;
+                width: 120px;
+                height: 1px;
+                content: "";
+                background: #dfdfdf;
+            }
+
+            .cirque.cur:before {
+                display: block;
+                position: absolute;
+                top: 50%;
+                left: 0;
+                margin-left: -120px;
+                width: 120px;
+                height: 1px;
+                content: "";
+                background: #0068b7;
+            }
+
+            .next-step {
+                display: block;
+                width: 500px;
+                height: 42px;
+                line-height: 42px;
+                color: #fff;
+                border: none;
+                outline: none;
+                background: #2581cf;
+                text-align: center;
+                font-size: 14px;
+                margin: 15px auto 0 auto;
+                cursor: pointer;
+                border-radius: 3px;
+                transition: all 0.2s;
+            }
+
+            .next-step:hover {
+                background: #0068b7;
+            }
+
+            form .item.ps {
+                height: 116px !important;
+            }
+
+            .item+.item {
+                margin-top: 10px;
+            }
+
+            form .item {
+                margin-top: 56px;
+                height: 42px;
+                line-height: 42px;
+                position: relative;
+                margin-left: 119px;
+            }
+
+            form .item:after {
+                display: table;
+                content: "";
+                clear: both;
+            }
+
+            body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, textarea, p, blockquote, th, td {
+                margin: 0;
+                padding: 0;
+            }
+
+            .item .title {
+                float: left;
+                width: 122px;
+                text-align: right;
+                margin-right: 10px;
+                font-size: 14px;
+                /*font-family:Tahoma, Geneva, sans-serif;
+    font-weight:600;*/
+            }
+
+            .item .title span {
+                color: #ff0505;
+                margin-right: 10px;
+            }
+
+            .item input {
+                display: block;
+                float: left;
+                height: 42px;
+                border: 1px solid #ccc;
+                font-size: 14px;
+                padding-left: 10px;
+                background: #fff;
+                /*font-weight:bold;*/
+                outline: none;
+                /*font-family:Tahoma, Geneva, sans-serif;
+    font-weight:400;*/
+            }
+
+            .tel-number input, .repeat input, .password input, .account input {
+                width: 500px;
+            }
+
+            .validate-number input {
+                width: 380px;
+            }
+
+            .security {
+                margin: 15px 0 0 250px;
+                height: 20px;
+                width: 330px;
+                border: 1px solid #e4e4e4;
+                border-radius: 10px;
+                padding: 2px;
+                background: #fff;
+            }
+
+            .security li {
+                position: relative;
+                float: left;
+                height: 14px;
+                width: 106px;
+                background: #e8eaeb;
+            }
+
+            .security li+li {
+                margin-left: 2px;
+            }
+
+            .security .weak {
+                border-radius: 10px 0 0 10px;
+            }
+
+            .security .weak.active {
+                background: #e3410d;
+            }
+
+            .security .middle.active {
+                background: #fe8111;
+            }
+
+            .security .strong.active {
+                background: #28ba2c;
+            }
+
+            .security .strong {
+                border-radius: 0 10px 10px 0;
+            }
+
+            .security li:after {
+                font-size: 12px;
+                color: #666;
+                position: absolute;
+                left: 50%;
+                margin-left: -5px;
+                bottom: -25px;
+            }
+
+            .security .weak:after {
+                content: "弱";
+            }
+
+            .security .middle:after {
+                content: "中";
+            }
+
+            .security .strong:after {
+                content: "强";
+            }
+
+            #validate {
+                display: block;
+                float: left;
+                width: 110px;
+                height: 42px;
+                line-height: 42px;
+                color: #fff;
+                border: none;
+                outline: none;
+                background: #f1ae08;
+                text-align: center;
+                font-size: 14px;
+                margin-left: 10px;
+                cursor: pointer;
+                border-radius: 3px;
+            }
+
+            #validate.active {
+                background: #7a7a7a;
+                color: #fff;
+            }
+			
+			form {
+    /*margin-top: 93px;*/
+    font-size: 14px;
+}
+
+.clearfix:before,
+.clearfix:after {
+    display: table;
+    line-height: 0;
+    content: "";
+}
+
+.clearfix:after {
+    clear: both;
+}
+
+			ol,
+ul {
+    list-style: none;
+}
+
+.warn {
+    float: left;
+    color: red;
+    margin-left: 1px;
+}
+span.warn {
+    float: none;
+    color: red;
+    margin-left: 1px;
+}
+        </style>
+    </head>
+    <body>
+		<form>
+			<div class="container">
+            <div class="schedule clearfix">
+                <div class="dot cur"></div>
+                <div class="cirque cur first-step">1</div>
+                <div class="cirque cur second-step">2</div>
+                <div class="cirque third-step">3</div>
+                <div class="cirque fourth-step">4</div>
+                <div class="dot last"></div>
+            </div>
+            <div class="item account">
+                <p class="title">
+                    <span>*</span>
+                    身份证号(帐号)&nbsp;:
+                
+                
+                </p>
+                <input class="signup" type="text" placeholder="使用真实身份证号" maxlength="18">
+                <span style="color: red;">&ensp;&ensp;（X统一大写）</span>
+            </div>
+            <div class="item password">
+                <p class="title">
+                    <span>*</span>
+                    密码&nbsp;:
+                
+                
+                </p>
+                <input class="passw" type="password" maxlength="20" placeholder="两次密码输入必须一致">
+                <p class="warn"></p>
+            </div>
+            <ul class="security clearfix">
+                <li class="weak active"></li>
+                <li class="middle"></li>
+                <li class="strong"></li>
+            </ul>
+            <div class="item repeat" style="margin-top: 26px">
+                <p class="title">
+                    <span>*</span>
+                    重复密码&nbsp;:
+                
+                
+                </p>
+                <input class="repeat-password" maxlength="20" type="password" placeholder="两次密码输入必须一致">
+                <p class="warn">两次密码不一致</p>
+            </div>
+            <div class="item tel-number">
+                <p class="title">
+                    <span>*</span>
+                    手机号码&nbsp;:
+                
+                
+                </p>
+                <input class="tel" type="text" maxlength="11" placeholder="请输入您的手机号码">
+                <p class="warn">请输入手机号</p>
+            </div>
+            <div class="item validate-number">
+                <p class="title">
+                    <span>*</span>
+                    验证码&nbsp;:
+                
+                
+                </p>
+                <input class="validaten" type="text" maxlength="6" placeholder="请输入手机验证码">
+                <div id="validate">获取验证码</div>
+                <p class="warn">请输入验证码</p>
+            </div>
+            <a class="next-step">下一步</a>
+        </div>
+		</form>
+    </body>
+</html>
