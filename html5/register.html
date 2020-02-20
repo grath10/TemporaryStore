@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <title>信息登记</title>
+    <link rel="shortcut icon" href="/static/images/favicon.ico" mce_href="/static/images/favicon.ico">
+    <link rel="stylesheet" th:href="@{/static/css/mob/colorui/animation.css}"/>
+    <link rel="stylesheet" th:href="@{/static/css/mob/colorui/icon.css}"/>
+    <link rel="stylesheet" th:href="@{/static/css/mob/colorui/app.css}"/>
+    <link rel="stylesheet" href="/static/css/uploadify.css" th:href="@{/static/css/uploadify.css}"/>
+    <style>
+    </style>
+    <script src="/static/admin-lte/plugins/jQuery/jquery-2.2.3.min.js" th:href="@{/static/admin-lte/plugins/jQuery/jquery-2.2.3.min.js}"></script>
+</head>
+<body ontouchstart>
+    <div>
+        <div class="cu-custom" style="height: 45px;">
+            <div class="cu-bar fixed bg-gradual-green" style="height: 45px; padding-top: 0px;">
+                <div class="action"></div>
+                <div class="content" style="top: 0px;">信息登记</div>
+            </div>
+        </div>
+        <div class="cu-bar bg-white margin-top">
+            <div class="action">身份证上传</div>
+        </div>
+        <div class="cu-form-group">
+            <div class="grid col-4 grid-square flex-sub justify-center">
+                <div id="nid-container" class="padding-xs solids">
+                    <input name="nidpic" id="nidpic" type="hidden" />
+                    <div id="app_nidpic_file" class="cuIcon-cameraadd uploadify"><span></span></div>
+                    <div class="cu-tag bg-red" id="shown-nid" onclick="delNid()" style="display: none;"><div class="cuIcon-close"><span></span></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="cu-form-group bg-white" style="min-height: auto;">
+            <div class="action">[只允许.jpg, .png格式的图片]</div>
+        </div>
+
+        <div class="cu-bar bg-white margin-top">
+            <div class="action">人脸上传</div>
+        </div>
+        <div class="cu-form-group">
+            <div class="grid col-4 grid-square flex-sub justify-center">
+                <div id="face-container" class="padding-xs solids">
+                    <input name="facepic" id="facepic" type="hidden" />
+                    <div id="app_facepic_file" class="cuIcon-cameraadd uploadify"><span></span></div>
+                    <div class="cu-tag bg-red" id="shown-face" onclick="delFace()" style="display:none;"><div class="cuIcon-close"><span></span></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="cu-form-group bg-white" style="min-height: auto;">
+            <div class="action">[只允许.jpg, .png格式的图片]</div>
+        </div>
+
+        <div class="padding flex flex-direction">
+            <button class="cu-btn lg bg-green shadow">提交</button>
+        </div>
+    </div>
+    <script src="/static/js/jquery.uploadify.js" th:href="@{/static/js/jquery.uploadify.js}"></script>
+    <script>
+        // debugger;
+        $("#app_nidpic_file").uploadify({
+            itemTemplate: '',
+            fileTypeExts:'*.jpg;*.png',
+            auto:true,
+            multi:false,
+            instanceNo:1,
+            fileSizeLimit:5120,
+            showUploadedPercent:false,
+            showUploadedSize:false,
+            removeTimeout:9999999,
+            queueSizeLimit: 1,
+            uploader:'/system/app/nid/imgupload',
+            onUploadComplete: function(file, data) {
+                if (data) {
+                    var json = JSON.parse(data),
+                        path = json.path,
+                        id = json.id;
+                    $("#app_nidpic_file").hide();
+                    $('#nid-container').removeClass('solids').addClass('bg-img').css("background-image", 'url(' + path + ')');
+                    $('#shown-nid').show();
+                    $("#nidpic").val(id);
+                }
+            }
+        });
+
+        $("#app_facepic_file").uploadify({
+            itemTemplate: '',
+            fileTypeExts:'*.jpg;*.png',
+            auto:true,
+            multi:false,
+            instanceNo:2,
+            fileSizeLimit:5120,
+            showUploadedPercent:false,
+            showUploadedSize:false,
+            removeTimeout:9999999,
+            queueSizeLimit: 1,
+            uploader:'/system/app/pspic/imgupload',
+            onUploadComplete: function(file, data) {
+                if (data) {
+                    var json = JSON.parse(data),
+                        path = json.path,
+                        id = json.id;
+                    $("#app_facepic_file").hide();
+                    $('#face-container').removeClass('solids').addClass('bg-img').css("background-image", 'url(' + path + ')');
+                    $('#shown-face').show();
+                    $("#facepic").val(id);
+                }
+            }
+        });
+
+        function delNid() {
+            var attId = $('#nidpic').val();
+            var uri = '/system/app/pic/delete?id=' + attId;
+            $.get(uri, function (result) {
+                if(result) {
+                    $('#nid-container').removeClass('bg-img').addClass('solids').css("background-image", "");
+                    $('#shown-nid').hide();
+                    $("#app_nidpic_file").show();
+                }
+            });
+        }
+
+        function delFace() {
+            var attId = $('#facepic').val();
+            var uri = '/system/app/pic/delete?id=' + attId;
+            $.get(uri, function (result) {
+                if(result) {
+                    $('#face-container').removeClass('bg-img').addClass('solids').css("background-image", "");
+                    $('#shown-face').hide();
+                    $("#app_facepic_file").show();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
